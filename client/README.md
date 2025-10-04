@@ -11,6 +11,9 @@ Modern portfolio website showcasing AI systems, web development, and creative pr
 - **Video Background** - Autoplay video hero on Projects page
 - **Client Projects** - Professional client work showcase (stonemasonry.ca)
 - **Academic Work** - GitHub repository integrations
+- **Home Hero Image Card** - Centered showcase image with glass effect (home.png)
+- **Sigil Display** - Marc.pglyph sigil (⟠∆∇𓂀) with subtle glow animation on Home
+- **Pglyph YAML Viewer** - Expandable viewer for `figment.yaml` (Marc.pglyph) with download link
 
 ## 🛠️ Tech Stack
 
@@ -58,6 +61,7 @@ See [NETLIFY_DEPLOY.md](./NETLIFY_DEPLOY.md) for detailed deployment instruction
 Configuration files included:
 - `netlify.toml` - Build settings
 - `public/_redirects` - SPA routing
+- `NODE_VERSION=18` set via netlify.toml
 
 ## 📁 Project Structure
 
@@ -75,16 +79,22 @@ client/
 │   ├── services.jsx      # Services offered
 │   └── hooks/            # Custom React hooks
 ├── public/
-│   └── music/            # Audio/video files
+│   └── music/            # Media & sigil assets
+│       ├── home.png                          # Hero image (Home)
+│       ├── figment.yaml                      # Marc.pglyph (Sigil YAML)
+│       ├── VOXSIGIL COMPLETE SIGIL SCHEMA.md # Full VoxSigil schema (markdown)
+│       ├── FromScarborough.mp4               # Projects hero video
+│       ├── LightSeedRising.mp3               # Music track
+│       └── 🌌 Nebula _Intro.mp3               # Music track
 └── dist/                 # Build output
 ```
 
 ## 🎨 Pages
 
-- **Home** - Hero with services overview
+- **Home** - Hero image card, sigil (⟠∆∇𓂀), expandable pglyph YAML viewer, services overview
 - **About** - Personal story and technical skills
 - **Education** - Academic background and certifications
-- **Projects** - Portfolio projects with live demos
+- **Projects** - Portfolio projects, VoxSigil schema viewer, music player
 - **Services** - Professional services offered
 - **Contact** - Contact form with validation
 
