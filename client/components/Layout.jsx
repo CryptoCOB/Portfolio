@@ -1,23 +1,36 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { isLoggedIn, clearToken } from '../src/auth';
 
 export default function Layout() {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navLinks = [
+  const navigate = useNavigate();
+  const authed = useMemo(() => isLoggedIn(), [location.key]);
+
+  const navBase = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About" },
     { to: "/education", label: "Education" },
     { to: "/project", label: "Projects" },
     { to: "/services", label: "Services" },
-    { to: "/contact", label: "Contact" }
+    { to: "/contact", label: "Contact" },
   ];
+  const navAuth = authed
+    ? [...navBase, { to: "/admin", label: "Admin" }]
+    : [...navBase, { to: "/login", label: "Login" }, { to: "/register", label: "Register" }];
+
+  const onLogout = () => {
+    clearToken();
+    setIsMenuOpen(false);
+    navigate('/');
+  };
 
   return (
-    <header className="glass-card sticky top-4 z-50 mx-4 lg:mx-8 rounded-2xl shadow-lg">
-      <div className="container-premium">
-        <div className="flex items-center justify-between py-6 px-2">
+    <header className="backdrop-blur bg-white/70 sticky top-0 z-50 mx-0 md:mx-4 lg:mx-8 rounded-none md:rounded-2xl shadow-sm md:shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="flex items-center justify-between py-3 md:py-5">
           
           {/* Logo Section */}
           <Link to="/" className="flex items-center group">
@@ -33,8 +46,8 @@ export default function Layout() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-4">
-            {navLinks.map((link, index) => {
+          <nav className="hidden lg:flex items-center gap-2 xl:gap-4">
+            {navAuth.map((link, index) => {
               const isActive = location.pathname === link.to;
               return (
                 <Link
@@ -51,11 +64,16 @@ export default function Layout() {
               );
             })}
           </nav>
+          {authed && (
+            <button onClick={onLogout} className="hidden lg:inline-flex px-4 py-2 rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-md hover:shadow-lg transition">
+              Logout
+            </button>
+          )}
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-3 rounded-xl text-gray-700 hover:bg-white/50 transition-all duration-300 hover:scale-110"
+            className="lg:hidden p-2 rounded-xl text-gray-700 hover:bg-white/60 transition-all duration-300 hover:scale-105"
           >
             <span className={`text-xl transition-transform duration-200 ${isMenuOpen ? 'rotate-90' : ''}`}>
               {isMenuOpen ? '✕' : '☰'}
@@ -65,9 +83,9 @@ export default function Layout() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200/30 animate-fade-in-up">
-            <nav className="flex flex-col gap-2">
-              {navLinks.map((link, index) => {
+          <div className="lg:hidden py-3 border-t border-gray-200/50 animate-fade-in-up">
+            <nav className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {navAuth.map((link, index) => {
                 const isActive = location.pathname === link.to;
                 return (
                   <Link
@@ -85,6 +103,11 @@ export default function Layout() {
                 );
               })}
             </nav>
+            {authed && (
+              <div className="mt-2">
+                <button onClick={onLogout} className="w-full px-4 py-2 rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-md">Logout</button>
+              </div>
+            )}
           </div>
         )}
       </div>

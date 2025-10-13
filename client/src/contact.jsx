@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Box, TextField, Button } from '@mui/material';
+import { Card, CardContent, Typography, Box, TextField, Button, Alert } from '@mui/material';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,8 @@ const Contact = () => {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -19,20 +21,35 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For now, just show success message
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        message: ''
+    setErrorMsg('');
+
+    // Basic email validation
+    const emailOk = /.+@.+\..+/.test(formData.email);
+    if (!emailOk) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const res = await fetch('/.netlify/functions/submit-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
-    }, 3000);
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error || 'Failed to send message');
+      }
+      setIsSubmitted(true);
+      setFormData({ firstName: '', lastName: '', email: '', phone: '', message: '' });
+    } catch (err) {
+      setErrorMsg(err.message || 'Something went wrong. Please try again later.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -112,6 +129,9 @@ const Contact = () => {
                   ) : (
                     <>
                       <Typography variant="h4" component="h3" sx={{ fontWeight: 'bold', mb: 4 }}>Send Message</Typography>
+                      {errorMsg && (
+                        <Alert severity="error" sx={{ mb: 2 }}>{errorMsg}</Alert>
+                      )}
                       <form onSubmit={handleSubmit}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3 }}>
@@ -174,10 +194,11 @@ const Contact = () => {
                             variant="contained"
                             size="large"
                             fullWidth
-                            endIcon={<span>🚀</span>}
+                            disabled={isSending}
+                            endIcon={<span>{isSending ? '⏳' : '🚀'}</span>}
                             sx={{ py: 2, fontSize: '1.125rem' }}
                           >
-                            Send Message
+                            {isSending ? 'Sending…' : 'Send Message'}
                           </Button>
                         </Box>
                       </form>

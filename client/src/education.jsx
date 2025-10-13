@@ -1,7 +1,27 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
+import { Card, CardContent, Typography, Box, Chip, Alert, Button } from '@mui/material';
+import { getApiBase } from './auth';
 
 const Education = () => {
+  const api = React.useMemo(() => getApiBase(), []);
+  const [quals, setQuals] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        setLoading(true); setError('');
+        const res = await fetch(`${api}/api/qualifications`);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.message || 'Failed to load qualifications');
+        if (active) setQuals(Array.isArray(json) ? json : []);
+      } catch (e) { if (active) setError(e.message); }
+      finally { if (active) setLoading(false); }
+    })();
+    return () => { active = false; };
+  }, [api]);
   return (
     <div className="min-h-screen bg-gradient-mesh">
       {/* Header */}
@@ -20,6 +40,38 @@ const Education = () => {
       <section className="section-padding">
         <div className="container-premium">
           <div className="max-w-6xl mx-auto space-y-12">
+            {/* DB Qualifications */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                <Typography sx={{ fontSize: '2rem', mr: 2 }}>📘</Typography>
+                <Typography variant="h4" component="h4" sx={{ fontWeight: 'bold' }}>
+                  Qualifications (Live)
+                </Typography>
+              </Box>
+              {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+              {loading && <Typography>Loading…</Typography>}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {quals.map(q => (
+                  <Card key={q._id} elevation={3}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent:'space-between', alignItems:'center', mb:1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{q.title}</Typography>
+                        <Chip label={q.completion ? new Date(q.completion).toLocaleDateString() : ''} size="small" />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb:1 }}>
+                        {q.description}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {q.firstname} {q.lastname} • {q.email}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))}
+                {!loading && !error && quals.length === 0 && (
+                  <Alert severity="info">No qualifications in your database yet — add some from the Admin page.</Alert>
+                )}
+              </div>
+            </Box>
             
             {/* Current Education */}
             <Card elevation={3}>

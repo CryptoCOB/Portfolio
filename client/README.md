@@ -48,11 +48,9 @@ Output directory: `dist/`
 
 ## 🌐 Deployment
 
-### Netlify (Recommended)
+### Netlify (optional)
 
-See [NETLIFY_DEPLOY.md](./NETLIFY_DEPLOY.md) for detailed deployment instructions.
-
-**Quick Deploy:**
+High-level deploy is summarized in the root `README.md`. Quick steps:
 1. Connect GitHub repository to Netlify
 2. Build command: `npm run build`
 3. Publish directory: `dist`
@@ -62,6 +60,30 @@ Configuration files included:
 - `netlify.toml` - Build settings
 - `public/_redirects` - SPA routing
 - `NODE_VERSION=18` set via netlify.toml
+
+### Environment variables (MongoDB + Functions)
+
+This app stores contact form submissions via a Netlify serverless function. Configure these variables:
+
+- `MONGODB_URI` – MongoDB Atlas connection string
+- `MONGODB_DB` – Database name (e.g., `portfolio`)
+- `MONGODB_COLLECTION` – Collection name (e.g., `contact_submissions`)
+- `ALLOWED_ORIGIN` – Optional CORS origin (e.g., your Netlify site URL)
+
+Local dev:
+
+1. Copy `.env.example` to `.env` in `client/`
+2. Fill in values
+3. Run with Netlify CLI to emulate functions:
+
+```powershell
+npm install -g netlify-cli
+cd client
+npm install
+netlify dev
+```
+
+The contact form posts to `/.netlify/functions/submit-contact`.
 
 ## 📁 Project Structure
 

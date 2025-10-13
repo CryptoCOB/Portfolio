@@ -1,57 +1,33 @@
 import React from 'react';
-import { Card, CardContent, CardActions, Typography, Button, Box, Chip } from '@mui/material';
+import { Card, CardContent, CardActions, Typography, Button, Box, Chip, Alert } from '@mui/material';
+import { getApiBase } from './auth';
 
 const Services = () => {
-  const services = [
-    {
-      title: 'Web Development',
-      icon: '💻',
-      blurb: 'Full-stack web applications built for performance and scalability',
-      details: 'React, Node.js, Express, REST APIs, authentication, responsive UI, deployment workflows',
-      features: ['React Apps', 'API Design', 'Database Modeling', 'Responsive UI'],
-      gradient: 'from-blue-500 to-purple-500'
-    },
-    {
-      title: 'AI Development',
-      icon: '🧠',
-      blurb: 'Intelligent solutions & cognitive agent architecture',
-      details: 'LLM integration, prompt engineering, agent orchestration, multimodal data pipelines (text / audio / structured)',
-      features: ['LLM Integration', 'Agents', 'Multimodal', 'Automation'],
-      gradient: 'from-purple-500 to-pink-500'
-    },
-    {
-      title: 'Creative & Branding',
-      icon: '🎨',
-      blurb: 'Visual identity and digital experience design',
-      details: 'Brand systems, logo/sigil creation, interface aesthetics, accessible design systems',
-      features: ['Brand Systems', 'Sigil Design', 'Design Systems', 'UI Polish'],
-      gradient: 'from-pink-500 to-blue-500'
-    },
-    {
-      title: 'Music & Multimedia',
-      icon: '🎵',
-      blurb: 'Audio production + AI-assisted composition workflows',
-      details: 'Suno / AI-assisted tracking, structure ideation, sonic identity crafting, multimedia alignment',
-      features: ['Production', 'Sound Design', 'AI Composition', 'Mix Prep'],
-      gradient: 'from-blue-500 to-pink-500'
-    },
-    {
-      title: 'Consulting & Strategy',
-      icon: '🧩',
-      blurb: 'Architecture, technical discovery, and roadmap guidance',
-      details: 'Feature scoping, technical audits, performance profiling, solution selection & PoC development',
-      features: ['Technical Audit', 'Roadmaps', 'PoC Builds', 'Mentorship'],
-      gradient: 'from-indigo-500 to-blue-500'
-    },
-    {
-      title: 'Performance Optimization',
-      icon: '⚡',
-      blurb: 'Speed, accessibility & reliability enhancements',
-      details: 'Bundle trimming, Core Web Vitals tuning, caching layers, database query optimization, profiling',
-      features: ['Core Vitals', 'Profiling', 'Caching', 'DB Tuning'],
-      gradient: 'from-green-500 to-blue-500'
-    }
-  ];
+  const api = React.useMemo(() => getApiBase(), []);
+  const [items, setItems] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await fetch(`${api}/api/services`);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.message || 'Failed to load services');
+        if (active) setItems(Array.isArray(json) ? json : []);
+      } catch (e) {
+        if (active) setError(e.message);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [api]);
+
+  // no curated fallback; content is now sourced from your database only
 
   const process = [
     { icon: '💡', title: 'Discover', text: 'Clarify goals, constraints & success metrics' },
@@ -74,39 +50,71 @@ const Services = () => {
         </div>
       </section>
 
-      {/* Services Grid */}
-      <section className="py-12 md:py-20 bg-white">
+  {/* Services (from Admin / DB) */}
+      <section className="py-12 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((svc, i) => (
-              <Card key={i} elevation={3} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h3" sx={{ fontSize: '2.5rem', mr: 2 }}>{svc.icon}</Typography>
-                    <Typography variant="h5" component="h3" sx={{ fontWeight: 'bold' }}>
-                      {svc.title}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body1" sx={{ mb: 2, color: 'text.primary' }}>
-                    {svc.blurb}
-                  </Typography>
-                  <Box sx={{ bgcolor: 'grey.100', borderRadius: 1, p: 2, mb: 2 }}>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {svc.details}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    {svc.features.map((f, fi) => (
-                      <Chip key={fi} label={f} size="small" variant="outlined" />
-                    ))}
-                  </Box>
-                </CardContent>
-                <CardActions>
-                  <Button fullWidth variant="contained" component="a" href="/contact">Start →</Button>
-                </CardActions>
-              </Card>
-            ))}
-          </div>
+          <Typography variant="h4" component="h2" sx={{ fontWeight: 600, mb: 2 }}>
+            Your Services
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+            These are loaded live from your database. Use the Admin page to add, edit, or delete services.
+          </Typography>
+
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {loading && <Typography>Loading…</Typography>}
+
+          {(!loading && items.length > 0) ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {items.map((svc) => (
+                <Card key={svc._id} elevation={3} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                      {svc.icon && (
+                        <Typography variant="h3" sx={{ fontSize: '2.5rem', mr: 2 }}>{svc.icon}</Typography>
+                      )}
+                      <Typography variant="h5" component="h3" sx={{ fontWeight: 'bold' }}>
+                        {svc.title}
+                      </Typography>
+                      {svc.published === false && (
+                        <Chip label="Unpublished" size="small" color="default" variant="outlined" sx={{ ml: 1 }} />
+                      )}
+                    </Box>
+                    {svc.blurb && (
+                      <Typography variant="body1" sx={{ mb: 2, color: 'text.primary' }}>
+                        {svc.blurb}
+                      </Typography>
+                    )}
+                    {(svc.details || typeof svc.price === 'number') && (
+                      <Box sx={{ bgcolor: 'grey.100', borderRadius: 1, p: 2, mb: 2 }}>
+                        {svc.details && (
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            {svc.details}
+                          </Typography>
+                        )}
+                        {typeof svc.price === 'number' && (
+                          <Typography variant="body2" sx={{ color: 'text.secondary', mt: svc.details ? 1 : 0 }}>
+                            {`Starting at $${svc.price.toFixed(2)}`}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                    {Array.isArray(svc.features) && svc.features.length > 0 && (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                        {svc.features.map((f, fi) => (
+                          <Chip key={fi} label={f} size="small" variant="outlined" />
+                        ))}
+                      </Box>
+                    )}
+                  </CardContent>
+                  <CardActions>
+                    <Button fullWidth variant="contained" component="a" href="/contact">Start →</Button>
+                  </CardActions>
+                </Card>
+              ))}
+            </div>
+          ) : (!loading && !error) ? (
+            <Alert severity="info">No services in your database yet — add some from the Admin page.</Alert>
+          ) : null}
         </div>
       </section>
 
